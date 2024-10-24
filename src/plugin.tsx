@@ -4,14 +4,17 @@ import { GlobalState } from 'mattermost-redux/types/store';
 import { PluginRegistry } from 'mattermost-redux/types/plugins';
 
 export default class Plugin {
-    // Initialize the property with window.fetch
     private originalFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = window.fetch.bind(window);
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState>) {
-        // No need to initialize originalFetch here since it's already initialized above
-        
+        console.log('Copilot extension plugin: Starting initialization'); // Add this
+
+        this.originalFetch = window.fetch.bind(window);
+
         // Intercept fetch requests
         window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+            console.log('Copilot extension plugin: Intercepted fetch request', { url: input }); // Add this
+            
             const url = typeof input === 'string' 
                 ? input 
                 : input instanceof URL 
@@ -20,14 +23,14 @@ export default class Plugin {
             
             // Check if this is a Copilot request
             if (url.includes('/api/v1/copilot') || url.includes('/mattermost-copilot/')) {
+                console.log('Copilot extension plugin: Handling Copilot request'); // Add this
                 return this.handleCopilotRequest(url, init);
             }
             
-            // Pass through to original fetch for non-Copilot requests
             return this.originalFetch(input, init);
         };
 
-        console.log('Copilot extension plugin initialized');
+        console.log('Copilot extension plugin: Initialization complete'); // Add this
     }
 
     private async handleCopilotRequest(url: string, init?: RequestInit): Promise<Response> {
