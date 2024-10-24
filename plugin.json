@@ -1,0 +1,9 @@
+{
+    "id": "com.mattermost.copilot-extension",
+    "name": "Copilot Extension",
+    "version": "1.0.0",
+    "min_server_version": "10.0.0",
+    "webapp": {
+        "bundle_path": "webapp/dist/main.js"
+    }
+}
