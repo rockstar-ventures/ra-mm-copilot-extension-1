@@ -24,12 +24,13 @@ declare module 'mattermost-redux/types/plugins' {
     }
 }
 
-// Add Window augmentation for globals
+// Enhanced Window augmentation
 declare global {
     interface Window {
         registerPlugin(id: string, plugin: any): void;
         store: {
             getState(): any;
         };
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
     }
 }

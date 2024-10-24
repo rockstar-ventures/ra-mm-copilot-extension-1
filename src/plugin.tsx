@@ -4,15 +4,19 @@ import { GlobalState } from 'mattermost-redux/types/store';
 import { PluginRegistry } from 'mattermost-redux/types/plugins';
 
 export default class Plugin {
-    private originalFetch: typeof window.fetch;
+    // Initialize the property with window.fetch
+    private originalFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = window.fetch.bind(window);
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState>) {
-        // Store original fetch
-        this.originalFetch = window.fetch;
-
+        // No need to initialize originalFetch here since it's already initialized above
+        
         // Intercept fetch requests
-        window.fetch = async (input: RequestInfo, init?: RequestInit) => {
-            const url = typeof input === 'string' ? input : input.url;
+        window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+            const url = typeof input === 'string' 
+                ? input 
+                : input instanceof URL 
+                    ? input.toString() 
+                    : input.url;
             
             // Check if this is a Copilot request
             if (url.includes('/api/v1/copilot') || url.includes('/mattermost-copilot/')) {
