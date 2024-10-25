@@ -1,7 +1,7 @@
 {
-    "compilerOptions": {
+  "compilerOptions": {
       "target": "es6",
-      "module": "commonjs",
+      "module": "esnext",
       "lib": ["dom", "es6", "es2017"],
       "jsx": "react",
       "strict": true,
@@ -13,8 +13,10 @@
       "isolatedModules": true,
       "noEmit": false,
       "declaration": true,
-      "outDir": "./dist"
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "dist"]
-  }
+      "outDir": "./dist",
+      "allowJs": true,
+      "noImplicitAny": false  // Add this to allow 'any' type for UMD globals
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

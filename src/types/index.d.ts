@@ -21,6 +21,14 @@ declare module 'mattermost-redux/types/plugins' {
     export interface PluginRegistry {
         registerWebSocketEventHandler(event: string, handler: (message: any) => void): void;
         registerMessageWillBePostedHook(hook: (post: any) => Promise<{ post: any }>): void;
+        // Add these UI-related methods
+        registerChannelHeaderButtonAction(
+            icon: React.ReactElement,
+            action: () => void,
+            tooltipText: string,
+            ariaLabel?: string
+        ): void;
+        // Add any other registry methods you need
     }
 }
 

@@ -1,19 +1,36 @@
-// src/plugin.tsx
 import { Store } from 'redux';
 import { GlobalState } from 'mattermost-redux/types/store';
 import { PluginRegistry } from 'mattermost-redux/types/plugins';
+
+declare global {
+    interface Window {
+        React: any;
+    }
+}
 
 export default class Plugin {
     private originalFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = window.fetch.bind(window);
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState>) {
-        console.log('Copilot extension plugin: Starting initialization'); // Add this
+        console.log('Copilot extension plugin: Starting initialization');
 
-        this.originalFetch = window.fetch.bind(window);
+        // Add a channel header button to make the plugin visible
+        registry.registerChannelHeaderButtonAction(
+            window.React.createElement('button', {
+                className: "channel-header__icon",
+                'aria-label': "Copilot Extension"
+            }, '🤖'),
+            () => {
+                console.log('Copilot button clicked!');
+                // Add your button click handler here
+            },
+            'Copilot Extension',
+            'Open Copilot Assistant'
+        );
 
-        // Intercept fetch requests
+        // Rest of your code...
         window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-            console.log('Copilot extension plugin: Intercepted fetch request', { url: input }); // Add this
+            console.log('Copilot extension plugin: Intercepted fetch request', { url: input });
             
             const url = typeof input === 'string' 
                 ? input 
@@ -21,16 +38,15 @@ export default class Plugin {
                     ? input.toString() 
                     : input.url;
             
-            // Check if this is a Copilot request
             if (url.includes('/api/v1/copilot') || url.includes('/mattermost-copilot/')) {
-                console.log('Copilot extension plugin: Handling Copilot request'); // Add this
+                console.log('Copilot extension plugin: Handling Copilot request');
                 return this.handleCopilotRequest(url, init);
             }
             
             return this.originalFetch(input, init);
         };
 
-        console.log('Copilot extension plugin: Initialization complete'); // Add this
+        console.log('Copilot extension plugin: Initialization complete');
     }
 
     private async handleCopilotRequest(url: string, init?: RequestInit): Promise<Response> {
