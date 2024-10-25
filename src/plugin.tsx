@@ -5,12 +5,63 @@ import { PluginRegistry } from 'mattermost-redux/types/plugins';
 declare const React: typeof import('react');
 declare const ReactDOM: typeof import('react-dom');
 
+interface ChatMessage {
+    id: string;
+    text: string;
+    isBot: boolean;
+    timestamp: Date;
+}
+
 interface ChatWindowProps {
     onClose: () => void;
 }
 
 const ChatWindow = ({ onClose }: ChatWindowProps) => {
-    console.log('ChatWindow component rendering'); // Debug log
+    const [messages, setMessages] = React.useState<ChatMessage[]>([
+        {
+            id: '1',
+            text: 'Hello! How can I assist you today?',
+            isBot: true,
+            timestamp: new Date()
+        }
+    ]);
+    const [inputValue, setInputValue] = React.useState('');
+    const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    React.useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const handleSubmit = async () => {
+        if (!inputValue.trim()) return;
+
+        // Add user message
+        const userMessage: ChatMessage = {
+            id: Date.now().toString(),
+            text: inputValue,
+            isBot: false,
+            timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setInputValue('');
+
+        // Simulate bot response (replace with actual API call)
+        setTimeout(() => {
+            const botMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                text: `I received your message: "${inputValue}"`,
+                isBot: true,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, botMessage]);
+        }, 1000);
+    };
+
     return React.createElement('div', {
         className: 'fixed right-4 bottom-4 w-96 h-[500px] bg-white rounded-lg shadow-xl flex flex-col border border-gray-200',
         style: { 
@@ -31,20 +82,69 @@ const ChatWindow = ({ onClose }: ChatWindowProps) => {
             }, 'Mattermost Copilot'),
             React.createElement('button', {
                 key: 'close',
-                className: 'text-white hover:text-gray-200 text-xl font-bold',
-                onClick: () => {
-                    console.log('Close button clicked'); // Debug log
-                    onClose();
-                }
+                className: 'text-white hover:text-gray-200 text-xl font-bold px-2',
+                onClick: onClose
             }, '×')
         ]),
         
-        // Test content to make sure it's visible
+        // Messages Container
         React.createElement('div', {
-            key: 'content',
-            className: 'p-4 bg-white',
-            style: { color: 'black' }
-        }, 'Test Content - If you can see this, the window is rendering!')
+            key: 'messages',
+            className: 'flex-1 overflow-y-auto p-4',
+            style: { backgroundColor: '#f5f5f5' }
+        }, [
+            ...messages.map(message => 
+                React.createElement('div', {
+                    key: message.id,
+                    className: `flex ${message.isBot ? 'justify-start' : 'justify-end'} mb-4`
+                }, [
+                    React.createElement('div', {
+                        className: `max-w-[75%] p-3 rounded-lg ${
+                            message.isBot 
+                                ? 'bg-white text-black' 
+                                : 'bg-blue-600 text-white'
+                        }`,
+                        style: {
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                        }
+                    }, message.text)
+                ])
+            ),
+            React.createElement('div', {
+                key: 'messages-end',
+                ref: messagesEndRef
+            })
+        ]),
+        
+        // Input Area
+        React.createElement('div', {
+            key: 'input',
+            className: 'p-4 border-t border-gray-200 bg-white rounded-b-lg'
+        }, [
+            React.createElement('div', {
+                className: 'flex space-x-2'
+            }, [
+                React.createElement('input', {
+                    type: 'text',
+                    value: inputValue,
+                    onChange: (e: any) => setInputValue(e.target.value),
+                    onKeyPress: (e: any) => {
+                        if (e.key === 'Enter') {
+                            handleSubmit();
+                        }
+                    },
+                    placeholder: 'Type your message...',
+                    className: 'flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500'
+                }),
+                React.createElement('button', {
+                    onClick: handleSubmit,
+                    disabled: !inputValue.trim(),
+                    className: `px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+                        !inputValue.trim() ? 'opacity-50 cursor-not-allowed' : ''
+                    }`
+                }, 'Send')
+            ])
+        ])
     ]);
 };
 
