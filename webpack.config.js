@@ -1,3 +1,4 @@
+// webpack.config.js
 const path = require('path');
 
 module.exports = {
@@ -13,6 +14,7 @@ module.exports = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
+        modules: ['src', 'node_modules'],
     },
     externals: {
         react: 'window.React',

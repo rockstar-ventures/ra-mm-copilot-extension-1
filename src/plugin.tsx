@@ -2,150 +2,129 @@ import { Store } from 'redux';
 import { GlobalState } from 'mattermost-redux/types/store';
 import { PluginRegistry } from 'mattermost-redux/types/plugins';
 
-declare global {
-    interface Window {
-        React: any;
-    }
+declare const React: typeof import('react');
+declare const ReactDOM: typeof import('react-dom');
+
+interface ChatWindowProps {
+    onClose: () => void;
 }
+
+const ChatWindow = ({ onClose }: ChatWindowProps) => {
+    console.log('ChatWindow component rendering'); // Debug log
+    return React.createElement('div', {
+        className: 'fixed right-4 bottom-4 w-96 h-[500px] bg-white rounded-lg shadow-xl flex flex-col border border-gray-200',
+        style: { 
+            zIndex: 9999,
+            position: 'fixed',
+            right: '20px',
+            bottom: '20px'
+        }
+    }, [
+        // Header
+        React.createElement('div', {
+            key: 'header',
+            className: 'p-4 border-b border-gray-200 flex justify-between items-center bg-blue-600 text-white rounded-t-lg'
+        }, [
+            React.createElement('h3', { 
+                key: 'title',
+                className: 'font-semibold'
+            }, 'Mattermost Copilot'),
+            React.createElement('button', {
+                key: 'close',
+                className: 'text-white hover:text-gray-200 text-xl font-bold',
+                onClick: () => {
+                    console.log('Close button clicked'); // Debug log
+                    onClose();
+                }
+            }, '×')
+        ]),
+        
+        // Test content to make sure it's visible
+        React.createElement('div', {
+            key: 'content',
+            className: 'p-4 bg-white',
+            style: { color: 'black' }
+        }, 'Test Content - If you can see this, the window is rendering!')
+    ]);
+};
 
 export default class Plugin {
     private originalFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = window.fetch.bind(window);
     private store!: Store<GlobalState>;
+    private chatWindowContainer: HTMLDivElement | null = null;
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState>) {
-        console.log('Copilot extension plugin: Starting initialization');
+        console.log('Plugin initialization started');
         this.store = store;
 
-        // Add a channel header button to make the plugin visible
+        // Create container with explicit styles
+        this.chatWindowContainer = document.createElement('div');
+        this.chatWindowContainer.id = 'copilot-chat-container';
+        this.chatWindowContainer.style.position = 'relative';
+        this.chatWindowContainer.style.zIndex = '9999';
+        document.body.appendChild(this.chatWindowContainer);
+        console.log('Chat container created:', this.chatWindowContainer);
+
+        // Register button with explicit logging
         registry.registerChannelHeaderButtonAction(
-            window.React.createElement('button', {
+            React.createElement('button', {
                 className: "channel-header__icon",
-                'aria-label': "Copilot Extension"
+                'aria-label': "Copilot Extension",
+                onClick: () => {
+                    console.log('Button clicked directly'); // This shouldn't fire
+                }
             }, '🤖'),
             () => {
-                console.log('Copilot button clicked!');
-                this.logChannelInfo();
+                console.log('Button action handler fired'); // This should fire
+                this.toggleChatWindow();
             },
             'Copilot Extension',
             'Open Copilot Assistant'
         );
 
-        // Intercept fetch requests
-        window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-            const url = typeof input === 'string' 
-                ? input 
-                : input instanceof URL 
-                    ? input.toString() 
-                    : input.url;
-            
-            // Log information based on the URL pattern
-            if (url.includes('/api/v4/channels/members/me')) {
-                console.log('Channel members request intercepted');
-                await this.logChannelInfo();
-            }
-            else if (url.includes('/api/v4/posts') && init?.method === 'POST') {
-                // Log when a new message is posted
-                const postData = init.body ? JSON.parse(init.body as string) : {};
-                console.log('New message posted:', {
-                    channelId: postData.channel_id,
-                    message: postData.message,
-                    props: postData.props
-                });
-            }
+        console.log('Plugin initialization completed');
+    }
 
-            // Get the response
-            const response = await this.originalFetch(input, init);
-            
-            // Clone the response so we can read its body
-            const responseClone = response.clone();
-            
+    private toggleChatWindow = () => {
+        console.log('toggleChatWindow called');
+        if (!this.chatWindowContainer) {
+            console.error('Chat container is null!');
+            return;
+        }
+
+        if (this.chatWindowContainer.children.length === 0) {
+            console.log('Rendering chat window');
             try {
-                // For channel members endpoint, log the response data
-                if (url.includes('/api/v4/channels/members/me')) {
-                    const data = await responseClone.json();
-                    console.log('Channel members response:', data);
-                }
+                ReactDOM.render(
+                    React.createElement(ChatWindow, {
+                        onClose: () => {
+                            console.log('Close handler called');
+                            this.hideChatWindow();
+                        }
+                    }),
+                    this.chatWindowContainer
+                );
+                console.log('Chat window rendered successfully');
             } catch (error) {
-                console.error('Error parsing response:', error);
+                console.error('Error rendering chat window:', error);
             }
+        } else {
+            console.log('Hiding chat window');
+            this.hideChatWindow();
+        }
+    };
 
-            return response;
-        };
-
-        console.log('Copilot extension plugin: Initialization complete');
-    }
-
-    private async logChannelInfo() {
-        try {
-            const state = this.store.getState();
-            const currentChannelId = state?.entities?.channels?.currentChannelId;
-            const currentTeamId = state?.entities?.teams?.currentTeamId;
-            
-            if (currentChannelId) {
-                // Get channel members
-                const membersResponse = await this.originalFetch(
-                    `http://localhost:8065/api/v4/channels/${currentChannelId}/members`,
-                    { method: 'GET' }
-                );
-                const members = await membersResponse.json();
-
-                // Get channel messages
-                const messagesResponse = await this.originalFetch(
-                    `http://localhost:8065/api/v4/channels/${currentChannelId}/posts`,
-                    { method: 'GET' }
-                );
-                const messages = await messagesResponse.json();
-
-                console.log('Channel Information:', {
-                    channelId: currentChannelId,
-                    teamId: currentTeamId,
-                    memberCount: members.length,
-                    recentMessages: messages.posts ? Object.values(messages.posts).slice(0, 5) : [],
-                    members: members
-                });
+    private hideChatWindow = () => {
+        console.log('hideChatWindow called');
+        if (this.chatWindowContainer) {
+            try {
+                ReactDOM.unmountComponentAtNode(this.chatWindowContainer);
+                console.log('Chat window unmounted successfully');
+            } catch (error) {
+                console.error('Error unmounting chat window:', error);
             }
-        } catch (error) {
-            console.error('Error fetching channel information:', error);
         }
-    }
-
-    private async handleCopilotRequest(url: string, init?: RequestInit): Promise<Response> {
-        try {
-            // Extract the original request data
-            const originalBody = init?.body ? JSON.parse(init.body as string) : {};
-            
-            // Get current Mattermost state
-            const context = this.getMattermostContext();
-            
-            // Forward to your backend
-            const response = await this.originalFetch('your-backend-url/api/copilot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(init?.headers || {})
-                },
-                body: JSON.stringify({
-                    original_request: originalBody,
-                    mattermost_context: context,
-                    original_url: url
-                })
-            });
-
-            // Transform response to match Copilot's format
-            const responseData = await response.json();
-            return new Response(JSON.stringify(this.transformResponse(responseData)), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-        } catch (error) {
-            console.error('Error in Copilot interceptor:', error);
-            // Fall back to original request
-            return this.originalFetch(url, init);
-        }
-    }
+    };
 
     private getMattermostContext(): Record<string, any> {
         try {
@@ -159,15 +138,5 @@ export default class Plugin {
             console.error('Error getting Mattermost context:', error);
             return {};
         }
-    }
-
-    private transformResponse(backendResponse: any): any {
-        // Transform your backend response to match Copilot's expected format
-        return {
-            type: 'copilot_response',
-            text: backendResponse.response || '',
-            suggestions: backendResponse.suggestions || [],
-            metadata: backendResponse.metadata || {}
-        };
     }
 }
