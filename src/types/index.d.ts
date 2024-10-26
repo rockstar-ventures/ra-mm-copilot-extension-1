@@ -1,4 +1,3 @@
-// src/types/index.d.ts
 declare module 'mattermost-redux/types/store' {
     export interface GlobalState {
         entities: {

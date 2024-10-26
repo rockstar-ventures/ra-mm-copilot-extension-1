@@ -2,3 +2,4 @@
 dist/com.mattermost.copilot-extension/webapp/dist/main.js
 *.gz
 /dist
+node_modules
