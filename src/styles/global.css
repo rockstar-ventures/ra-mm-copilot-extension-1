@@ -1,0 +1,7 @@
+.mm-copilot-chat {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.mm-copilot-chat * {
+    box-sizing: border-box;
+}

@@ -33,8 +33,12 @@ export default class Plugin {
         // Create container with explicit styles
         this.chatWindowContainer = document.createElement('div');
         this.chatWindowContainer.id = 'copilot-chat-container';
-        this.chatWindowContainer.style.position = 'relative';
+        this.chatWindowContainer.style.position = 'fixed';
+        this.chatWindowContainer.style.right = '24px';  // Increased margin
+        this.chatWindowContainer.style.bottom = '24px';
         this.chatWindowContainer.style.zIndex = '9999';
+        this.chatWindowContainer.style.width = '450px';  // Fixed width
+        this.chatWindowContainer.style.height = 'auto';
         document.body.appendChild(this.chatWindowContainer);
         console.log('Chat container created:', this.chatWindowContainer);
 

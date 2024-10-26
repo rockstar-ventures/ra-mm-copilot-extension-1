@@ -1,8 +1,10 @@
 // src/types/ui-components.ts
 export interface WeatherData {
     temperature: number;
-    location: string;  
-    condition: string; 
+    city: string;       // we have this
+    state: string;      // we have this
+    location?: string;  // computed property
+    condition?: string; // optional weather condition
 }
 
 export type DynamicComponentType = 'weather' | 'other-type';
