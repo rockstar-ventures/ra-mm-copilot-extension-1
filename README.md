@@ -1,1 +1,1 @@
-test 2
+open cmd and run build.bat to build plugin
