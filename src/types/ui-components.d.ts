@@ -1,13 +1,40 @@
 // src/types/ui-components.ts
 export interface WeatherData {
     temperature: number;
-    city: string;       // we have this
-    state: string;      // we have this
-    location?: string;  // computed property
-    condition?: string; // optional weather condition
+    location: string;
+    condition?: string;
 }
 
-export type DynamicComponentType = 'weather' | 'other-type';
+export interface AppointmentData {
+    time: string;
+    title: string;
+    status: string;
+}
+
+export interface SalesForecastData {
+    period: string;
+    amount: number;
+}
+
+export interface ExpenseData {
+    category: string;
+    amount: number;
+}
+
+export interface ComponentData {
+    weather?: WeatherData;
+    salesForecast?: {
+        forecastData: SalesForecastData[];
+    };
+    expenses?: {
+        expensesData: ExpenseData[];
+    };
+    appointments?: {
+        appointments: AppointmentData[];
+    };
+}
+
+export type DynamicComponentType = 'weather' | 'sales-forecast' | 'expenses' | 'appointments';
 
 export interface ChatMessage {
     id: string;
@@ -16,9 +43,14 @@ export interface ChatMessage {
     timestamp: Date;
     component?: {
         type: DynamicComponentType;
-        data: {
-            weather?: WeatherData;
-            // Add other component data types here
-        };
+        data: ComponentData;
+    };
+}
+
+export interface ProcessQueryResponse {
+    text: string;
+    component?: {
+        type: DynamicComponentType;
+        data: ComponentData;
     };
 }

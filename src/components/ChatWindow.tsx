@@ -1,6 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { WeatherData, ChatMessage, DynamicComponentType } from '../types/ui-components';
+import type { WeatherData, ChatMessage, DynamicComponentType, ComponentData, AppointmentData } from '../types/ui-components';
 import { backendService } from 'services/BackendService';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    BarChart,
+    Bar
+} from 'recharts';
+
 
 interface DynamicComponentProps {
     type: DynamicComponentType;
@@ -12,25 +24,131 @@ interface DynamicComponentProps {
 
 const WeatherComponent: React.FC<{data: WeatherData}> = ({data}) => {
     return (
-        <div className="flex flex-col w-[325px] h-[300px] bg-black text-white rounded-lg p-4">
-            <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold">{data.location}</span>
-                <span>{new Date().toLocaleTimeString()}</span>
-            </div>
-            <div className="flex-1 flex items-center justify-center">
-                <span className="text-6xl font-bold">{data.temperature}°</span>
-            </div>
-            <div className="text-center">
-                <span className="text-lg">{data.condition}</span>
-            </div>
+      <div className="flex flex-col w-full bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6">
+        <div className="flex justify-between items-center">
+          <span className="text-xl font-semibold">{data.location}</span>
+          <span className="text-sm opacity-90">{new Date().toLocaleTimeString()}</span>
         </div>
+        <div className="flex-1 flex items-center justify-center py-8">
+          <span className="text-7xl font-bold">{data.temperature}°</span>
+        </div>
+        <div className="text-center">
+          <span className="text-lg font-medium">{data.condition}</span>
+        </div>
+      </div>
     );
-};
+  };
 
-const DynamicComponentRenderer: React.FC<DynamicComponentProps> = ({type, data}) => {
+const DynamicComponentRenderer: React.FC<{type: DynamicComponentType; data: ComponentData}> = ({type, data}) => {
+    console.log('DynamicComponentRenderer called with type:', type);
+    console.log('DynamicComponentRenderer data:', data);
+
+    const renderSalesForecast = () => {
+        const chartData = data.salesForecast?.forecastData || [];
+        console.log('Sales forecast data:', chartData);
+        
+        return (
+            <div className="w-full h-[300px] bg-white p-4 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">Sales Forecast</h3>
+                {chartData.length > 0 ? (
+                    <div style={{ width: '100%', height: '250px' }}>
+                        <ResponsiveContainer>
+                            <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="period" />
+                                <YAxis />
+                                <Tooltip />
+                                <Line 
+                                    type="monotone" 
+                                    dataKey="amount" 
+                                    stroke="#4F46E5" 
+                                    dot={{ strokeWidth: 2 }} 
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div>No data available</div>
+                )}
+            </div>
+        );
+    };
+
+    const renderExpenses = () => {
+        const chartData = data.expenses?.expensesData || [];
+        console.log('Expenses data:', chartData);
+        
+        return (
+            <div className="w-full h-[300px] bg-white p-4 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">Expenses Overview</h3>
+                {chartData.length > 0 ? (
+                    <div style={{ width: '100%', height: '250px' }}>
+                        <ResponsiveContainer>
+                            <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="category" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar 
+                                    dataKey="amount" 
+                                    fill="#4F46E5" 
+                                    radius={[4, 4, 0, 0]} 
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div>No data available</div>
+                )}
+            </div>
+        );
+    };
+
     switch(type) {
         case 'weather':
             return <WeatherComponent data={data.weather!} />;
+            
+        case 'sales-forecast':
+            return renderSalesForecast();
+            
+        case 'expenses':
+            return renderExpenses();
+            
+        case 'appointments':
+            return (
+                <div className="w-full bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4">Today's Appointments</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-gray-50">
+                                    <th className="p-2 text-left text-sm font-medium text-gray-500">Time</th>
+                                    <th className="p-2 text-left text-sm font-medium text-gray-500">Title</th>
+                                    <th className="p-2 text-left text-sm font-medium text-gray-500">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.appointments?.appointments.map((apt, index) => (
+                                    <tr key={index} className="border-t">
+                                        <td className="p-2 text-sm text-gray-900">{apt.time}</td>
+                                        <td className="p-2 text-sm text-gray-900">{apt.title}</td>
+                                        <td className="p-2">
+                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                                apt.status === 'Upcoming' ? 'bg-blue-100 text-blue-800' :
+                                                apt.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                                'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                                {apt.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+            
         default:
             return <div>Unsupported component type</div>;
     }
@@ -62,18 +180,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({onClose}) => {
 
     const handleSubmit = async () => {
         if (!inputValue.trim()) return;
-
+    
         const userMessage: ChatMessage = {
             id: Date.now().toString(),
             text: inputValue,
             isBot: false,
             timestamp: new Date()
         };
-
+    
         setMessages(prev => [...prev, userMessage]);
-
+    
         try {
             const result = await backendService.processQuery(inputValue);
+            console.log('Backend service response:', result); // Add this debug log
             
             const botMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
@@ -82,7 +201,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({onClose}) => {
                 timestamp: new Date(),
                 component: result.component
             };
-
+            
+            console.log('Bot message to be added:', botMessage); // Add this debug log
             setMessages(prev => [...prev, botMessage]);
         } catch (error) {
             console.error('Error:', error);
@@ -94,7 +214,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({onClose}) => {
             };
             setMessages(prev => [...prev, errorMessage]);
         }
-
+    
         setInputValue('');
     };
 
