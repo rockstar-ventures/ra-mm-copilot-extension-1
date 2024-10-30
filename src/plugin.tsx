@@ -17,11 +17,8 @@ declare global {
     }
 }
 
-
 export default class Plugin {
-
-    private readonly BACKEND_URL = 'http://localhost:8000';
-
+    private readonly BACKEND_URL = 'https://34.36.144.151';
     private originalFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = window.fetch.bind(window);
     private store!: Store<GlobalState>;
     private chatWindowContainer: HTMLDivElement | null = null;
@@ -30,29 +27,27 @@ export default class Plugin {
         console.log('Plugin initialization started');
         this.store = store;
 
-        // Create container with explicit styles
         this.chatWindowContainer = document.createElement('div');
         this.chatWindowContainer.id = 'copilot-chat-container';
         this.chatWindowContainer.style.position = 'fixed';
-        this.chatWindowContainer.style.right = '24px';  // Increased margin
+        this.chatWindowContainer.style.right = '24px';
         this.chatWindowContainer.style.bottom = '24px';
         this.chatWindowContainer.style.zIndex = '9999';
-        this.chatWindowContainer.style.width = '450px';  // Fixed width
+        this.chatWindowContainer.style.width = '450px';
         this.chatWindowContainer.style.height = 'auto';
         document.body.appendChild(this.chatWindowContainer);
         console.log('Chat container created:', this.chatWindowContainer);
 
-        // Register button with explicit logging
         registry.registerChannelHeaderButtonAction(
             window.React.createElement('button', {
                 className: "channel-header__icon",
                 'aria-label': "Copilot Extension",
                 onClick: () => {
-                    console.log('Button clicked directly'); // This shouldn't fire
+                    console.log('Button clicked directly');
                 }
             }, '🤖'),
             () => {
-                console.log('Button action handler fired'); // This should fire
+                console.log('Button action handler fired');
                 this.toggleChatWindow();
             },
             'Copilot Extension',
@@ -63,7 +58,6 @@ export default class Plugin {
     }
 
     private async makeBackendRequest(endpoint: string, method: string, data?: any) {
-        // Ensure endpoint has /invoke for POST requests
         const finalEndpoint = method === 'POST' ? `${endpoint}/invoke` : endpoint;
         const url = `${this.BACKEND_URL}${finalEndpoint}`;
         
@@ -72,7 +66,8 @@ export default class Plugin {
         console.log('Data:', data);
     
         try {
-            const response = await fetch(url, {
+            // Create custom agent to ignore SSL certificate validation
+            const requestOptions: RequestInit = {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,8 +78,16 @@ export default class Plugin {
                         input: data.input,
                         chat_history: data.chat_history || []
                     }
-                }) : undefined
-            });
+                }) : undefined,
+                // Add mode and credentials options for dev environment
+                mode: 'cors',
+                credentials: 'include',
+                // @ts-ignore
+                rejectUnauthorized: false,  // Ignore SSL certificate validation
+                agent: new (require('https').Agent)({ rejectUnauthorized: false })
+            };
+
+            const response = await fetch(url, requestOptions);
     
             console.log('Response status:', response.status);
             
@@ -103,9 +106,7 @@ export default class Plugin {
         }
     }
 
-
     private async processResponse(response: any) {
-        // Extract UI components and text from response
         const result = {
             text: '',
             uiComponent: null
@@ -117,12 +118,10 @@ export default class Plugin {
             }
             
             if (response.output.tool_result) {
-                // Process tool results and create appropriate UI components
                 switch (response.output.tool_result.type) {
                     case 'weather':
                         result.uiComponent = response.output.tool_result;
                         break;
-                    // Add more cases for other tools
                 }
             }
         }
@@ -136,7 +135,7 @@ export default class Plugin {
                 type: "human",
                 content: message
             }],
-            chat_history: []  // Add chat history if you want to maintain context
+            chat_history: []
         });
     }
     

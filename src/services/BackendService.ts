@@ -9,12 +9,12 @@ interface ProcessQueryResponse {
     };
 }
 
-const BACKEND_URL = 'http://localhost:8000/chat';
 
 export class BackendService {
     private baseUrl: string;
 
     constructor() {
+        //this.baseUrl = 'https://146.148.83.83';
         this.baseUrl = 'http://localhost:8000';
     }
 
@@ -24,7 +24,7 @@ export class BackendService {
     ): Promise<ProcessQueryResponse> {
         try {
             console.log('Sending query to backend:', query);
-            const response = await fetch(`${this.baseUrl}/chat/invoke`, {
+            const response = await fetch(`https://34.36.144.151/chat/invoke`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export class BackendService {
             }
     
             const data = await response.json();
-            console.log('Raw backend response:', data); // Add this
+            console.log('Raw backend response:', data);
     
             // Transform backend response to match our UI needs
             const result: ProcessQueryResponse = {
@@ -55,8 +55,8 @@ export class BackendService {
     
             // Handle tool results
             if (data.output.tool_result) {
-                console.log('Tool result type:', data.output.tool_result.type); // Add this
-                console.log('Tool result data:', data.output.tool_result); // Add this
+                console.log('Tool result type:', data.output.tool_result.type);
+                console.log('Tool result data:', data.output.tool_result);
     
                 if (data.output.tool_result.type === 'expenses') {
                     result.component = {
@@ -90,7 +90,7 @@ export class BackendService {
                 }
             }
     
-            console.log('Final processed result:', result); // Add this
+            console.log('Final processed result:', result);
             return result;
         } catch (error) {
             console.error('Error processing query:', error);
