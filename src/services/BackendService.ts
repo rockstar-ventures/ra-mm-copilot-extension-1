@@ -1,4 +1,3 @@
-// src/services/BackendService.ts
 import type { DynamicComponentType } from '../types/ui-components';
 
 interface ProcessQueryResponse {

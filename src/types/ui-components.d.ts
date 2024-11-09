@@ -1,4 +1,3 @@
-// src/types/ui-components.ts
 export interface WeatherData {
     temperature: number;
     location: string;

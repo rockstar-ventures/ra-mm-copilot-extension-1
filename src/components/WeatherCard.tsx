@@ -1,7 +1,5 @@
-// src/components/WeatherCard.tsx
 import React from 'react';
 
-// If you're using a module system, add this at the top
 declare const window: {
     React: typeof React;
 } & Window;
@@ -18,7 +16,7 @@ interface WeatherCardProps {
     data: WeatherData;
 }
 
-// src/components/WeatherCard.tsx
+
 const WeatherCard: React.FC<WeatherCardProps> = ({data}) => {
     const location = `${data.city}, ${data.state}`;
     
@@ -45,7 +43,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({data}) => {
     );
 };
 
-// Export both the component and the types
 export type { WeatherData, WeatherCardProps };
 export { WeatherCard };
 export default WeatherCard;

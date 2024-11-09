@@ -66,7 +66,7 @@ export default class Plugin {
         console.log('Data:', data);
     
         try {
-            // Create custom agent to ignore SSL certificate validation
+            // TODO: Aniket : Create custom agent to ignore SSL certificate validation
             const requestOptions: RequestInit = {
                 method: method,
                 headers: {
@@ -79,11 +79,11 @@ export default class Plugin {
                         chat_history: data.chat_history || []
                     }
                 }) : undefined,
-                // Add mode and credentials options for dev environment
+                // TODO: Aniket: Add mode and credentials options for dev environment
                 mode: 'cors',
                 credentials: 'include',
                 // @ts-ignore
-                rejectUnauthorized: false,  // Ignore SSL certificate validation
+                rejectUnauthorized: false,  // TODO: Aniket: Ignore SSL certificate validation
                 agent: new (require('https').Agent)({ rejectUnauthorized: false })
             };
 

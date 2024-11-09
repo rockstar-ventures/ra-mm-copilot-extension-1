@@ -27,10 +27,10 @@ module.exports = {
             "stream": require.resolve("stream-browserify"),
             "buffer": require.resolve("buffer/"),
             "util": require.resolve("util/"),
-            "url": require.resolve("url/"),  // Added this
-            "assert": require.resolve("assert/"),  // Added for dependencies
-            "crypto": require.resolve("crypto-browserify"),  // Added for dependencies
-            "zlib": require.resolve("browserify-zlib"),  // Added for dependencies
+            "url": require.resolve("url/"), 
+            "assert": require.resolve("assert/"),  
+            "crypto": require.resolve("crypto-browserify"),
+            "zlib": require.resolve("browserify-zlib"),  
         }
     },
     plugins: [

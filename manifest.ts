@@ -1,4 +1,3 @@
-// src/manifest.ts
 export default {
     id: 'com.mattermost.copilot-extension',
     name: 'Copilot Extension',
